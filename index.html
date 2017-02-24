@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="js/jquery-1.11.3.min.js"></script>
+</head>
+<body>
+<canvas id="myCanvas"></canvas>
+<script type="text/javascript">
+    var GLOBAL =GLOBAL||{};
+    GLOBAL.Width =0;
+    GLOBAL.Height =0;
+    GLOBAL.Radius =Math.PI/180;
+    GLOBAL.RadiusTime =Math.PI/180;
+    GLOBAL.Line =140;
+    GLOBAL.Collision =Math.abs(Math.asin(50/(GLOBAL.Width/2-300+GLOBAL.Line)));
+    GLOBAL.flag =false;
+    GLOBAL.Game =true;
+
+    $(window).ready(function(){
+        var canvas =$("#myCanvas");
+        var context =canvas.get(0).getContext("2d");
+        canvas.attr("width",$(window).width());
+        canvas.attr("height",$(window).height());
+        GLOBAL.Width =canvas.width();
+        GLOBAL.Height =canvas.height();
+        var Ball =function(x,y,r,c){
+            this.x =x;
+            this.y =y;
+            this.r =r;
+            this.c =c;
+        };
+        var bigBall =new Ball(GLOBAL.Width/2,GLOBAL.Height/2-300,GLOBAL.Width/2-300,0);
+
+        var balls =new Array();
+        animate();
+        function animate(){
+            context.clearRect(0,0,GLOBAL.Width,GLOBAL.Height);
+            context.beginPath();
+            context.arc(GLOBAL.Width/2,GLOBAL.Height-400,50,0,Math.PI*2,false);
+            context.fill();
+            context.closePath();
+
+            context.save();
+            context.beginPath();
+            context.transform(
+                    Math.cos(GLOBAL.Radius),
+                    Math.sin(GLOBAL.Radius),
+                    -Math.sin(GLOBAL.Radius),
+                    Math.cos(GLOBAL.Radius),
+                    bigBall.x,
+                    bigBall.y);
+            context.arc(0,0,bigBall.r,0,Math.PI*2,false);
+            context.fill();
+            context.closePath();
+            context.restore();
+
+            for(var i=0;i<balls.length;i++){
+                var tmpBall =balls[i];
+                context.save();
+                context.beginPath();
+                context.transform(
+                        Math.cos(tmpBall.c),
+                        Math.sin(tmpBall.c),
+                        -Math.sin(tmpBall.c),
+                        Math.cos(tmpBall.c),
+                        bigBall.x,
+                        bigBall.y);
+                context.arc(bigBall.r+GLOBAL.Line,bigBall.r+GLOBAL.Line,tmpBall.r,0,Math.PI*2,false);
+                context.fill();
+                context.lineWidth =10;
+                context.strokeStyle ="red";
+                context.moveTo(0,0);
+                context.lineTo(bigBall.r+GLOBAL.Line,bigBall.r+GLOBAL.Line);
+                context.stroke();
+                context.closePath();
+                context.restore();
+                tmpBall.c +=GLOBAL.RadiusTime;
+                if(tmpBall.c >Math.PI*2)
+                    tmpBall.c -=Math.PI*2;
+            }
+
+            if(GLOBAL.flag){
+                for(var i=0;i<balls.length-1;i++){
+                    var tmpBall =balls[i];
+                    if(Math.abs(tmpBall.c-balls[balls.length-1].c)<GLOBAL.Collision){
+                        console.log("GG");
+                        GLOBAL.Game =false;
+                    }
+                }
+                GLOBAL.flag =false;
+            }
+
+            GLOBAL.Radius +=GLOBAL.RadiusTime;
+            if(GLOBAL.Game) {
+                GLOBAL.Game = setTimeout(animate, 5);
+            }else{
+                context.clearRect(0,0,GLOBAL.Width,GLOBAL.Height);
+                context.font ="8rem Arial";
+                context.fillText("游戏结束",200,GLOBAL.Height/2);
+            }
+        }
+
+        $(window).click(function(){
+            balls.push(new Ball(0,0,50,Math.PI/180*45));
+            GLOBAL.flag =true;
+        })
+    })
+</script>
+</body>
+</html>
